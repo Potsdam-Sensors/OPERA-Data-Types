@@ -6,6 +6,30 @@ import (
 	"net"
 )
 
+var DISPLAY_DATA_KEYS = struct {
+	SPS30_PM25     string
+	CO2            string
+	PRESSURE       string
+	VOC            string
+	TEMP           string
+	RH             string
+	IMX8_TEMP_OK   string
+	TEENSY_TEMP_OK string
+	LASER_TEMP_OK  string
+	FLOW_RATE_OK   string
+}{
+	SPS30_PM25:     "PM2.5",
+	CO2:            "CO2",
+	PRESSURE:       "pressure",
+	VOC:            "VOC Index",
+	TEMP:           "Flow Temp",
+	RH:             "Flow RH",
+	IMX8_TEMP_OK:   "I.MX8 T Ok",
+	TEENSY_TEMP_OK: "Teensy T Ok",
+	LASER_TEMP_OK:  "Laser T Ok",
+	FLOW_RATE_OK:   "Flow Rate Ok",
+}
+
 type DisplayDeviceStatus struct {
 	Imx8Temp        bool `json:"I.MX8 T Ok" binding:"required"`
 	TeensyMcuTemp   bool `json:"Teensy T Ok" binding:"required"`
