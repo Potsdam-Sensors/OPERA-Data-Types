@@ -34,6 +34,8 @@ func (d *MlTempHumRawData) Populate(h *HousekeepingData, s *SecondaryData) {
 // For raw data we will just take all of the teensy data
 
 // For output, output just a number for PM2.5
+const DATA_TYPE_ML_PRIMARY = "P"
+
 type MlPm25OutputData struct {
 	Pm2p5 float32
 }
@@ -45,6 +47,12 @@ func (d *MlPm25OutputData) DisplayData() *DisplayPrimary {
 	}
 }
 
+/* GOBS */
+
 func (d *MlTempHumOutputData) SendGob(unixSocketPath string) error {
 	return sendStructGob(d, DATA_TYPE_ML_TEMP_RH, unixSocketPath)
+}
+
+func (d *MlPm25OutputData) SendGob(unixSocketPath string) error {
+	return sendStructGob(d, DATA_TYPE_ML_PRIMARY, unixSocketPath)
 }
