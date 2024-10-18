@@ -7,6 +7,8 @@ import (
 )
 
 var DISPLAY_DATA_KEYS = struct {
+	PM25           string
+	Aerosol        string
 	SPS30_PM25     string
 	CO2            string
 	PRESSURE       string
@@ -18,6 +20,8 @@ var DISPLAY_DATA_KEYS = struct {
 	LASER_TEMP_OK  string
 	FLOW_RATE_OK   string
 }{
+	PM25:           "Primary PM2.5",
+	Aerosol:        "Aerosol",
 	SPS30_PM25:     "PM2.5",
 	CO2:            "CO2",
 	PRESSURE:       "pressure",
@@ -28,6 +32,11 @@ var DISPLAY_DATA_KEYS = struct {
 	TEENSY_TEMP_OK: "Teensy T Ok",
 	LASER_TEMP_OK:  "Laser T Ok",
 	FLOW_RATE_OK:   "Flow Rate Ok",
+}
+
+type DisplayPrimary struct {
+	Pm2p5   float32 `json:"Primary PM2.5" binding:"required"`
+	Aerosol string  `json:"Aerosol" binding:"required"`
 }
 
 type DisplayDeviceStatus struct {
