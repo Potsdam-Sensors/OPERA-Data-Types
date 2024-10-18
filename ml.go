@@ -9,6 +9,8 @@ type MlTempHumRawData struct {
 	FlowHum  float32 `json:"flow_hum" binding:"required"`
 }
 
+const DATA_TYPE_ML_TEMP_RH = "R"
+
 // Data output by ML for sample temp/hum
 type MlTempHumOutputData struct {
 	Temp float32 `json:"temp" binding:"required"`
@@ -41,4 +43,8 @@ func (d *MlPm25OutputData) DisplayData() *DisplayPrimary {
 		Pm2p5:   d.Pm2p5,
 		Aerosol: "nil",
 	}
+}
+
+func (d *MlTempHumOutputData) SendGob(unixSocketPath string) error {
+	return sendStructGob(d, DATA_TYPE_ML_TEMP_RH, unixSocketPath)
 }

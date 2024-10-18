@@ -46,6 +46,9 @@ func ReceiveStructGob(conn net.Conn) (any, error) {
 	case DATA_TYPE_TEENSY:
 		data = &TeensyData{}
 		dataTypeName = "teensy raw"
+	case DATA_TYPE_ML_TEMP_RH:
+		data = &MlTempHumOutputData{}
+		dataTypeName = "ml temp/rh"
 	default:
 		return nil, fmt.Errorf("recieved unknown datatype: %v", msgType)
 	}
