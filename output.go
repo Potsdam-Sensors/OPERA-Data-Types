@@ -109,10 +109,12 @@ func (d *TeensyData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	filename := generateFileName(portentaSerial, "Raw", d.UnixSec)
 	for _, c := range d.Counts {
 		var pulsesStr = ""
-		if len(c.Pulses) > 0 {
+		if n := len(c.Pulses); n > 0 {
 			pulsesStr += "\"" + c.Pulses[0].String()
-			for _, p := range c.Pulses {
-				pulsesStr += "," + p.String()
+			if n > 1 {
+				for _, p := range c.Pulses[1:] {
+					pulsesStr += "," + p.String()
+				}
 			}
 			pulsesStr += "\""
 		}
