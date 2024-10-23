@@ -120,11 +120,11 @@ func (d *TeensyData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 		ret = append(ret, CsvFileWriteJob{
 			Filename: filename,
 			Headers: "unix,portenta,hv_enabled,hv_set,hv_read,pd0,pd1,laser,raw_scalar0,raw_scalar1,diff_scalar0,diff_scalar1," +
-				"baseline0,baseline1,raw_upper_th0,raw_upper_th1,diff_upper_th0,diff_upper_th1,ms_read,num_buff,num_pulse,pulses_per_second,pulses",
-			Content: fmt.Sprintf("%d,%s,%v,%d,%d,%d,%d,%d,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.3f,%.3f,%d,%d,%d,%.2f,%s",
+				"baseline0,baseline1,raw_upper_th0,raw_upper_th1,diff_upper_th0,diff_upper_th1,ms_read,num_buff,max_laser_on,num_pulse,pulses_per_second,pulses",
+			Content: fmt.Sprintf("%d,%s,%v,%d,%d,%d,%d,%d,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.3f,%.3f,%d,%d,%d,%d,%.2f,%s",
 				d.UnixSec, portentaSerial, d.HvEnabled, d.HvSet, d.HvMonitor, c.PinPd0, c.PinPd1, c.PinLaser,
 				c.RawScalar0, c.RawScalar1, c.DiffedScalar0, c.DiffedScalar1, c.Baseline0, c.Baseline1, c.RawUpperTh0, c.RawUpperTh1, c.DiffedUpperTh0, c.DiffedUpperTh1,
-				c.MsRead, c.BuffersRead, c.NumPulses, c.PulsesPerSecond, pulsesStr),
+				c.MsRead, c.BuffersRead, c.MaxLaserOn, c.NumPulses, c.PulsesPerSecond, pulsesStr),
 		})
 	}
 	return ret
