@@ -50,6 +50,7 @@ type TeensyCounts struct { // 55
 	MsRead      uint32 `json:"ms_read" binding:"required"`
 	BuffersRead uint32 `json:"buffers_read" binding:"required"`
 	NumPulses   uint32 `json:"num_pulses" binding:"required"`
+	MaxLaserOn  uint16 `json:"max_laser_on" binding:"required"`
 	// 12
 	PulsesPerSecond float32 `json:"pulses_per_second" binding:"required"`
 	// x
