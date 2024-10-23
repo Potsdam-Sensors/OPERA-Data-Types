@@ -62,7 +62,7 @@ func (c *TeensyCounts) String() string {
 	return fmt.Sprintf("[Counts %d,%d:%d | %d ms, %d Buffers, %d Pulses [%.3f pulses/s] | Baselines: %.2f & %.2f]", c.PinPd0, c.PinPd1, c.PinLaser, c.MsRead, c.BuffersRead, c.NumPulses, c.PulsesPerSecond, c.Baseline0, c.Baseline1)
 }
 func (d *TeensyData) String() string {
-	return fmt.Sprintf("[Teensy Data | Unix %d | MCU Temp %.1f degC | Flow %.1f degC, %.1f %%, %.4f m/s | Hv Enabled: %v, Set: %d, Val: %d]", d.UnixSec, d.McuTemp, d.FlowTemp, d.FlowHum, d.FlowRate,
+	return fmt.Sprintf("[Teensy Data | Unix %d | MCU Temp %.1f degC | Flow %.1f degC, %.1f perc., %.4f m/s | Hv Enabled: %v, Set: %d, Val: %d]", d.UnixSec, d.McuTemp, d.FlowTemp, d.FlowHum, d.FlowRate,
 		d.HvEnabled, d.HvSet, d.HvMonitor)
 }
 func (d *TeensyData) SendGob(unixSocketPath string) error {
