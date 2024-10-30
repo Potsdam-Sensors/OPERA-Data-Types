@@ -87,7 +87,7 @@ func (d *MlPm25InputData) Populate(t TeensyData) {
 		d.PulseData[idx].Pd0 = c.PinPd0
 		d.PulseData[idx].Pd1 = c.PinPd1
 		d.PulseData[idx].Pulses = make([]Pulse, len(c.Pulses))
-		copy(c.Pulses, d.PulseData[idx].Pulses)
+		copy(d.PulseData[idx].Pulses, c.Pulses)
 	}
 }
 
