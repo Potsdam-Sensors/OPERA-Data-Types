@@ -79,7 +79,26 @@ func (d *SecondaryData) Populate(unix uint32, serial string, teensy *TeensyData,
 	d.FlowRate = teensy.FlowRate
 }
 
+type LearnedData struct {
+	UnixSec uint32
+	Pm2p5   float32
+}
+
+func (d *LearnedData) Populate(o *MlPm25OutputData) {
+	d.UnixSec = o.UnixSec
+	d.Pm2p5 = o.Pm2p5
+}
+
 /* To Csv Functions */
+
+func (d *LearnedData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
+	return []CsvFileWriteJob{{
+		Filename: generateFileName(portentaSerial, "Learned", d.UnixSec),
+		Headers:  "unix,portenta,pm2p5",
+		Content:  fmt.Sprintf("%d,%s,%.3f", d.UnixSec, portentaSerial, d.Pm2p5),
+	}}
+}
+
 func (d *SecondaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	return []CsvFileWriteJob{{
 		Filename: generateFileName(portentaSerial, "Secondary", d.Unix),
