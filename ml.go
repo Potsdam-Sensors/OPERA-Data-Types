@@ -42,7 +42,8 @@ func (d *MlTempHumRawData) Populate(h *HousekeepingData, s *SecondaryData) {
 const DATA_TYPE_ML_PRIMARY = "P"
 
 type MlPm25OutputData struct {
-	Pm2p5 float32
+	UnixSec uint32
+	Pm2p5   float32
 }
 
 type mlPm25InputDataPulses struct {
