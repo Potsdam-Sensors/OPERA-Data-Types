@@ -6,7 +6,7 @@ import (
 	"net"
 )
 
-func sendStructGob(d any, dataIdentifier string, unixSocketPath string) error {
+func sendStructGob(d interface{}, dataIdentifier string, unixSocketPath string) error {
 	conn, err := net.Dial("unix", unixSocketPath)
 	if err != nil {
 		return fmt.Errorf("failed to connect to socket, %s: %v", unixSocketPath, err)
@@ -23,7 +23,7 @@ func sendStructGob(d any, dataIdentifier string, unixSocketPath string) error {
 	return nil
 }
 
-func ReceiveStructGob(conn net.Conn) (any, error) {
+func ReceiveStructGob(conn net.Conn) (interface{}, error) {
 	decoder := gob.NewDecoder(conn)
 
 	/* Get message type */
@@ -33,7 +33,7 @@ func ReceiveStructGob(conn net.Conn) (any, error) {
 	}
 
 	/* Interpret Data */
-	var data any
+	var data interface{}
 	var dataTypeName string
 
 	switch msgType {

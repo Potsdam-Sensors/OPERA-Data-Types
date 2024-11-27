@@ -62,27 +62,27 @@ type DisplayFlowConditions struct {
 }
 
 /* Per Type */
-func (m *M4SensorMeasurement) DisplayData() any {
+func (m *M4SensorMeasurement) DisplayData() interface{} {
 	return &DisplayM4Sensors{
 		Co2:      m.Co2,
 		VocIndex: m.VocIndex,
 		Pressure: m.Pressure,
 	}
 }
-func (s *Sps30Data) DisplayData() any {
+func (s *Sps30Data) DisplayData() interface{} {
 	return &DisplaySps30{
 		Pm2p5: s.Pm2p5,
 	}
 }
 
-func (t *TeensyData) DisplayData() any {
+func (t *TeensyData) DisplayData() interface{} {
 	return &DisplayFlowConditions{
 		FlowTemp: t.FlowTemp,
 		FlowHum:  t.FlowHum,
 	}
 }
 
-func GetDisplayData(m4 *M4SensorMeasurement, teensy *TeensyData, imx8Temp float32) any {
+func GetDisplayData(m4 *M4SensorMeasurement, teensy *TeensyData, imx8Temp float32) interface{} {
 	laserTempOk := true
 	for _, tmp := range []float32{m4.OpticalTemp0, m4.OpticalTemp1, m4.OpticalTemp2} {
 		if tmp > OK_LASER_TEMP_MAX_C {
@@ -99,7 +99,7 @@ func GetDisplayData(m4 *M4SensorMeasurement, teensy *TeensyData, imx8Temp float3
 	}
 }
 
-func SendDisplayData(data any, unixSocketPath string) error {
+func SendDisplayData(data interface{}, unixSocketPath string) error {
 	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to convert to json: %v", err)

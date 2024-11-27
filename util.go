@@ -2,7 +2,7 @@ package operadatatypes
 
 import "math"
 
-func RemoveNaN(m map[string]any) {
+func RemoveNaN(m map[string]interface{}) {
 	keysToRemove := []string{}
 	for k, v := range m {
 		switch rv := v.(type) {
