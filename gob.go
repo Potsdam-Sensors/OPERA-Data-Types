@@ -44,7 +44,7 @@ func ReceiveStructGob(conn net.Conn) (interface{}, error) {
 		data = &M4SensorMeasurement{}
 		dataTypeName = "m4 sensor"
 	case DATA_TYPE_TEENSY:
-		data = &TeensyData{}
+		data = &NewTeensyData{}
 		dataTypeName = "teensy raw"
 	case DATA_TYPE_ML_TEMP_RH:
 		data = &MlTempHumOutputData{}
