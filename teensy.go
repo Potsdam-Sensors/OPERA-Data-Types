@@ -71,10 +71,12 @@ func (d *TeensyData) SendGob(unixSocketPath string) error {
 }
 
 /* Potentially New Version */
+const NUMBER_INDICES_PULSE = 8
+
 type NewPulse struct { // 20B
-	Indices  [16]uint16 `json:"indices" binding:"required"`
-	RawPeak  uint16     `json:"raw_peak" binding:"required"`
-	SidePeak uint16     `json:"side_peak"`
+	Indices  [NUMBER_INDICES_PULSE]uint16 `json:"indices" binding:"required"`
+	RawPeak  uint16                       `json:"raw_peak" binding:"required"`
+	SidePeak uint16                       `json:"side_peak"`
 }
 
 type NewTeensyCounts struct { // 55
