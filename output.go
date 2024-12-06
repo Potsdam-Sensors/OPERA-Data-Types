@@ -150,3 +150,38 @@ func (d *TeensyData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	}
 	return ret
 }
+
+func (p NewPulse) String() string {
+	indicesStr := fmt.Sprintf("%d", p.Indices[0])
+	for _, ind := range p.Indices[1:] {
+		indicesStr += fmt.Sprintf(",%d", ind)
+	}
+	return fmt.Sprintf("(%d,%d,[%s])", p.RawPeak, p.SidePeak, indicesStr)
+}
+func (d *NewTeensyData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
+	ret := []CsvFileWriteJob{}
+	filename := generateFileName(portentaSerial, "Raw", d.UnixSec)
+	for _, c := range d.Counts {
+		var pulsesStr = ""
+		if n := len(c.Pulses); n > 0 {
+			pulsesStr += "\"[" + c.Pulses[0].String()
+			if n > 1 {
+				for _, p := range c.Pulses[1:] {
+					pulsesStr += "," + p.String()
+				}
+			}
+			pulsesStr += "]\""
+		}
+
+		ret = append(ret, CsvFileWriteJob{
+			Filename: filename,
+			Headers: "unix,portenta,hv_enabled,hv_set,hv_read,pd0,pd1,laser,raw_scalar0,raw_scalar1,diff_scalar0,diff_scalar1," +
+				"baseline0,baseline1,raw_upper_th0,raw_upper_th1,diff_upper_th0,diff_upper_th1,ms_read,num_buff,max_laser_on,num_pulse,pulses_per_second,pulses",
+			Content: fmt.Sprintf("%d,%s,%v,%d,%d,%d,%d,%d,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.3f,%.3f,%d,%d,%d,%d,%.2f,%s",
+				d.UnixSec, portentaSerial, d.HvEnabled, d.HvSet, d.HvMonitor, c.PinPd0, c.PinPd1, c.PinLaser,
+				c.RawScalar0, c.RawScalar1, c.DiffedScalar0, c.DiffedScalar1, c.Baseline0, c.Baseline1, c.RawUpperTh0, c.RawUpperTh1, c.DiffedUpperTh0, c.DiffedUpperTh1,
+				c.MsRead, c.BuffersRead, c.MaxLaserOn, c.NumPulses, c.PulsesPerSecond, pulsesStr),
+		})
+	}
+	return ret
+}
