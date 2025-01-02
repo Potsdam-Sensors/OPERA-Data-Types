@@ -1,7 +1,9 @@
 package operadatatypes
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 )
 
 const DATA_TYPE_SPS30 = "S"
@@ -26,4 +28,23 @@ func (d *Sps30Data) String() string {
 
 func (d *Sps30Data) SendGob(unixSocketPath string) error {
 	return sendStructGob(d, DATA_TYPE_SPS30, unixSocketPath)
+}
+
+func (d *Sps30Data) Pack(w io.Writer) {
+	for _, val := range []float32{
+		d.Pm1, d.Pm2p5, d.Pm4, d.Pm10, d.Pn0p5, d.Pn1, d.Pn2p5, d.Pn4, d.Pn10, d.TypicalParticleSize,
+	} {
+		binary.Write(w, binary.LittleEndian, val)
+	}
+}
+
+func (d *Sps30Data) Unpack(r io.Reader) error {
+	for _, val := range []*float32{
+		&d.Pm1, &d.Pm2p5, &d.Pm4, &d.Pm10, &d.Pn0p5, &d.Pn1, &d.Pn2p5, &d.Pn4, &d.Pn10, &d.TypicalParticleSize,
+	} {
+		if err := binary.Read(r, binary.LittleEndian, val); err != nil {
+			return err
+		}
+	}
+	return nil
 }

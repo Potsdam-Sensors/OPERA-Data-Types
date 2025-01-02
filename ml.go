@@ -28,8 +28,8 @@ func (d *MlTempHumOutputData) DisplayData() *DisplayFlowConditions {
 		FlowHum:  d.Hum,
 	}
 }
-func (d *MlTempHumRawData) Populate(h *HousekeepingData, s *SecondaryData) {
-	d.Imx8Temp = h.PortentaImx8Temp
+func (d *MlTempHumRawData) Populate(s *SecondaryData) {
+	d.Imx8Temp = s.PortentaImx8Temp
 	d.FlowTemp = s.FlowTemperature
 	d.FlowHum = s.FlowHumidity
 }
