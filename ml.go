@@ -91,6 +91,58 @@ func (d *MlPm25InputData) Populate(t TeensyData) {
 		copy(d.PulseData[idx].Pulses, c.Pulses)
 	}
 }
+func TranslateToOldCounts(c *NewTeensyCounts) *TeensyCounts {
+	ret := &TeensyCounts{
+		PinLaser: c.PinLaser,
+		PinPd0:   c.PinPd0,
+		PinPd1:   c.PinPd1,
+
+		RawScalar0:    c.RawScalar0,
+		RawScalar1:    c.RawScalar1,
+		DiffedScalar0: c.DiffedScalar0,
+		DiffedScalar1: c.DiffedScalar1,
+
+		Baseline0: c.Baseline0,
+		Baseline1: c.Baseline1,
+
+		RawUpperTh0:    c.RawUpperTh0,
+		RawUpperTh1:    c.RawUpperTh1,
+		DiffedUpperTh0: c.DiffedUpperTh0,
+		DiffedUpperTh1: c.DiffedUpperTh1,
+
+		MsRead:      c.MsRead,
+		BuffersRead: c.BuffersRead,
+		NumPulses:   c.NumPulses,
+		MaxLaserOn:  c.MaxLaserOn,
+
+		PulsesPerSecond: c.PulsesPerSecond,
+
+		Pulses: make([]Pulse, len(c.Pulses)),
+	}
+	usPerPoint := float32(c.MsRead*1000) / float32(c.BuffersRead*3500)
+	for idx, p := range c.Pulses {
+		ret.Pulses[idx] = Pulse{
+			Height:   float32(p.RawPeak) - c.Baseline0,
+			Width:    float32(p.Indices[2]+p.Indices[5]) * usPerPoint,
+			SidePeak: float32(p.SidePeak) - c.Baseline1,
+		}
+	}
+
+	return ret
+}
+
+func NewTeensyDataToMlPm25(t *NewTeensyData) *MlPm25InputData {
+	faux := TeensyData{
+		UnixSec: t.UnixSec,
+		Counts:  make([]*TeensyCounts, len(t.Counts)),
+	}
+	for idx, c := range t.Counts {
+		faux.Counts[idx] = TranslateToOldCounts(c)
+	}
+	ret := &MlPm25InputData{}
+	ret.Populate(faux)
+	return ret
+}
 
 func TeensyDataToMlPm25(t *TeensyData) *MlPm25InputData {
 	ret := &MlPm25InputData{}
