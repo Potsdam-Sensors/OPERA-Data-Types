@@ -81,21 +81,47 @@ func (d *SecondaryData) Populate(unix uint32, serial string, teensy *TeensyData,
 
 type LearnedData struct {
 	UnixSec uint32
+	Temp    float32
+	RH      float32
 	Pm2p5   float32
+
+	ClassificationLabels       []string
+	ClassifcationProbabilities []float32
 }
 
-func (d *LearnedData) Populate(o *MlPm25OutputData) {
-	d.UnixSec = o.UnixSec
-	d.Pm2p5 = o.Pm2p5
+func (d *LearnedData) Populate(t MlTempHumOutputData, p MlPrimaryDataOutput) {
+	d.UnixSec = p.UnixSec
+	d.Temp = t.Temp
+	d.RH = t.Hum
+
+	d.Pm2p5 = p.Pm25.Pm2p5
+	d.ClassificationLabels = p.Classifcation.Labels
+	d.ClassifcationProbabilities = p.Classifcation.Probabilities
 }
 
 /* To Csv Functions */
 
 func (d *LearnedData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
+	var strProb string = ""
+	if len(d.ClassifcationProbabilities) > 0 {
+		strProb = fmt.Sprintf("%.1f", d.ClassifcationProbabilities[0])
+		for _, p := range d.ClassifcationProbabilities[1:] {
+			strProb += fmt.Sprintf(",%.1f", p)
+		}
+	}
+
+	var strLabels string = ""
+	if len(d.ClassificationLabels) > 0 {
+		strLabels = "\"" + d.ClassificationLabels[0] + "\""
+		for _, l := range d.ClassificationLabels[1:] {
+			strLabels += ",\"" + l + "\""
+		}
+	}
+
 	return []CsvFileWriteJob{{
 		Filename: generateFileName(portentaSerial, "Learned", d.UnixSec),
-		Headers:  "unix,portenta,pm2p5",
-		Content:  fmt.Sprintf("%d,%s,%.3f", d.UnixSec, portentaSerial, d.Pm2p5),
+		Headers:  "unix,portenta,temp,hum,pm2p5,classification_labels,classification_probabilities",
+		Content:  fmt.Sprintf("%d,%s,%.1f,%.1f,%.3f,\"%s\",\"%s\"", d.UnixSec, portentaSerial, d.Temp, d.RH, d.Pm2p5, strLabels, strProb),
 	}}
 }
 
