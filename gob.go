@@ -52,6 +52,8 @@ func ReceiveStructGob(conn net.Conn) (interface{}, error) {
 	case DATA_TYPE_ML_PRIMARY:
 		data = &MlPm25OutputData{}
 		dataTypeName = "ml pm25"
+	case DATA_TYPE_ML_CLASSIFICATION:
+		data = &MlClassificationOutputData{}
 	default:
 		return nil, fmt.Errorf("recieved unknown datatype: %v", msgType)
 	}

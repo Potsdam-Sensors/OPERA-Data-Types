@@ -157,6 +157,31 @@ func (d *MlPm25OutputData) DisplayData() *DisplayPrimary {
 	}
 }
 
+const DATA_TYPE_ML_CLASSIFICATION = "C"
+
+type MlClassificationOutputData struct {
+	UnixSec       uint32    `json:"unix_sec" binding:"required"`
+	Labels        []string  `json:"labels" binding:"required"`
+	Probabilities []float32 `json:"probabilities" binding:"required"`
+}
+
+func (d *MlClassificationOutputData) GetClass() string {
+	maxProbIdx := 0
+	for idx, p := range d.Probabilities {
+		if p > d.Probabilities[maxProbIdx] {
+			maxProbIdx = idx
+		}
+	}
+	return d.Labels[maxProbIdx]
+}
+
+func (d *MlClassificationOutputData) DisplayData() *DisplayPrimary {
+	return &DisplayPrimary{
+		Pm2p5:   0,
+		Aerosol: d.GetClass(),
+	}
+}
+
 /* GOBS */
 
 func (d *MlTempHumOutputData) SendGob(unixSocketPath string) error {
@@ -165,4 +190,8 @@ func (d *MlTempHumOutputData) SendGob(unixSocketPath string) error {
 
 func (d *MlPm25OutputData) SendGob(unixSocketPath string) error {
 	return sendStructGob(d, DATA_TYPE_ML_PRIMARY, unixSocketPath)
+}
+
+func (d *MlClassificationOutputData) SendGob(unixSocketPath string) error {
+	return sendStructGob(d, DATA_TYPE_ML_CLASSIFICATION, unixSocketPath)
 }
