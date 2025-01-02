@@ -157,8 +157,6 @@ func (d *MlPm25OutputData) DisplayData() *DisplayPrimary {
 	}
 }
 
-const DATA_TYPE_ML_CLASSIFICATION = "C"
-
 type MlClassificationOutputData struct {
 	UnixSec       uint32    `json:"unix_sec" binding:"required"`
 	Labels        []string  `json:"labels" binding:"required"`
@@ -175,11 +173,10 @@ func (d *MlClassificationOutputData) GetClass() string {
 	return d.Labels[maxProbIdx]
 }
 
-func (d *MlClassificationOutputData) DisplayData() *DisplayPrimary {
-	return &DisplayPrimary{
-		Pm2p5:   0,
-		Aerosol: d.GetClass(),
-	}
+type MlPrimaryDataOutput struct {
+	UnixSec       uint32
+	Classifcation MlClassificationOutputData
+	Pm25          MlPm25OutputData
 }
 
 /* GOBS */
@@ -188,10 +185,13 @@ func (d *MlTempHumOutputData) SendGob(unixSocketPath string) error {
 	return sendStructGob(d, DATA_TYPE_ML_TEMP_RH, unixSocketPath)
 }
 
-func (d *MlPm25OutputData) SendGob(unixSocketPath string) error {
+func (d *MlPrimaryDataOutput) SendGob(unixSocketPath string) error {
 	return sendStructGob(d, DATA_TYPE_ML_PRIMARY, unixSocketPath)
 }
 
-func (d *MlClassificationOutputData) SendGob(unixSocketPath string) error {
-	return sendStructGob(d, DATA_TYPE_ML_CLASSIFICATION, unixSocketPath)
+func (d *MlPrimaryDataOutput) DisplayData() *DisplayPrimary {
+	return &DisplayPrimary{
+		Pm2p5:   d.Pm25.Pm2p5,
+		Aerosol: d.Classifcation.GetClass(),
+	}
 }
