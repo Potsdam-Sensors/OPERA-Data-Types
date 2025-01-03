@@ -1,6 +1,7 @@
 package operadatatypes
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -121,7 +122,7 @@ type OutputData interface {
 /* CSV File Write Job */
 func (d *SecondaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	return []CsvFileWriteJob{{
-		Filename: generateFileName(portentaSerial, "Secondary", d.UnixSec),
+		Filename: generateFileName(portentaSerial, "SecondaryRaw", d.UnixSec),
 		Headers:  "unix,portenta,sps30_pm1,sps30_pm2p5,sps30_pm4,sps30_pm10,sps30_pn0p5,sps30_pn1,sps30_pn2p5,sps30_pn4,sps30_pn10,sps30_tps,pressure,co2,voc_index,flow_temp,flow_hum,flow_rate,imx8_temp,teensy_temp,optical_temp0,optical_temp1,optical_temp2,omb_temp_htu,omb_hum_htu,omb_temp_scd,omg_hum_scd,mean_5v_monitor,std_dev_5v_monitor",
 		Content: fmt.Sprintf("%d,%s,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%d,%d,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.4f,%.4f",
 			d.UnixSec, d.PortentaSerial, d.Sps30.Pm1, d.Sps30.Pm2p5, d.Sps30.Pm4, d.Sps30.Pm10, d.Sps30.Pn0p5, d.Sps30.Pn1, d.Sps30.Pn2p5, d.Sps30.Pn4, d.Sps30.Pn10, d.Sps30.TypicalParticleSize, d.Pressure, d.Co2, d.VocIndex, d.FlowTemperature, d.FlowHumidity, d.FlowRate, d.PortentaImx8Temp, d.TeensyMcuTemp, d.OpticalTemperatures[0], d.OpticalTemperatures[1], d.OpticalTemperatures[2], d.OmbTemperatureHtu, d.OmbHumidityHtu, d.OmbTemperatureScd, d.OmbHumidityScd, d.Monitor5vMean, d.Monitor5vStdDev),
@@ -147,7 +148,7 @@ func (p NewPulse) String() string {
 
 func (d *PrimaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	ret := []CsvFileWriteJob{}
-	filename := generateFileName(portentaSerial, "Raw", d.UnixSec)
+	filename := generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec)
 	for _, c := range d.Counts {
 		var pulsesStr = ""
 		if n := len(c.Pulses); n > 0 {
@@ -258,6 +259,16 @@ func (d *SecondaryData) Unpack(r io.Reader) error {
 	return nil
 }
 
+// TODO: Can we use generics for this? The only reason I'm even doing a separate function is the filename
+func (d *SecondaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWriteJob {
+	var buf bytes.Buffer
+	d.Pack(&buf)
+	return []BinaryFileWriteJob{{
+		Filename: generateFileName(portentaSerial, "SecondaryRaw", d.UnixSec),
+		Content:  buf.Bytes(),
+	}}
+}
+
 func (d *OperaData) Pack(w io.Writer) {
 	binary.Write(w, binary.LittleEndian, d.UnixSec)
 	writeStringToBinary(w, d.PortentaSerial)
@@ -330,6 +341,15 @@ func (d *OperaData) Unpack(r io.Reader) error {
 		return err
 	}
 	return nil
+}
+
+func (d *OperaData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWriteJob {
+	var buf bytes.Buffer
+	d.Pack(&buf)
+	return []BinaryFileWriteJob{{
+		Filename: generateFileName(portentaSerial, "Output", d.UnixSec),
+		Content:  buf.Bytes(),
+	}}
 }
 
 func (p NewPulse) Pack(w io.Writer) {
@@ -480,6 +500,15 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 		d.Counts[i] = c
 	}
 	return nil
+}
+
+func (d *PrimaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWriteJob {
+	var buf bytes.Buffer
+	d.Pack(&buf)
+	return []BinaryFileWriteJob{{
+		Filename: generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec),
+		Content:  buf.Bytes(),
+	}}
 }
 
 // type HousekeepingData struct {

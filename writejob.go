@@ -1,7 +1,6 @@
 package operadatatypes
 
 import (
-	"bytes"
 	"fmt"
 )
 
@@ -40,13 +39,4 @@ func (b BinaryFileWriteJob) String() string {
 
 func (b BinaryFileWriteJob) FileName() string {
 	return b.Filename
-}
-
-func NewBinaryFileWriteJob(d OutputData, filename string) *BinaryFileWriteJob {
-	var buf bytes.Buffer
-	d.Pack(&buf)
-	return &BinaryFileWriteJob{
-		Filename: filename,
-		Content:  buf.Bytes(),
-	}
 }
