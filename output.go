@@ -9,9 +9,17 @@ import (
 )
 
 /* Util */
-func generateFileName(portentaSerial, dataLabel string, timestamp uint32) string {
+const CSV_FILE_EXTENSION = ".csv"
+const BINARY_FILE_EXTENSION = ".raw"
+
+func generateFileName(portentaSerial, dataLabel string, timestamp uint32, isCsv bool) string {
 	t := time.Unix(int64(timestamp), 0)
-	return fmt.Sprintf("OPERA_%s_%s_%04d%02d%02d.csv", portentaSerial, dataLabel, t.Year(), t.Month(), t.Day())
+	ret := fmt.Sprintf("OPERA_%s_%s_%04d%02d%02d", portentaSerial, dataLabel, t.Year(), t.Month(), t.Day())
+	if isCsv {
+		return ret + CSV_FILE_EXTENSION
+	} else {
+		return ret + BINARY_FILE_EXTENSION
+	}
 }
 
 func writeStringToBinary(w io.Writer, s string) {
@@ -122,7 +130,7 @@ type OutputData interface {
 /* CSV File Write Job */
 func (d *SecondaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	return []CsvFileWriteJob{{
-		Filename: generateFileName(portentaSerial, "SecondaryRaw", d.UnixSec),
+		Filename: generateFileName(portentaSerial, "SecondaryRaw", d.UnixSec, true),
 		Headers:  "unix,portenta,sps30_pm1,sps30_pm2p5,sps30_pm4,sps30_pm10,sps30_pn0p5,sps30_pn1,sps30_pn2p5,sps30_pn4,sps30_pn10,sps30_tps,pressure,co2,voc_index,flow_temp,flow_hum,flow_rate,imx8_temp,teensy_temp,optical_temp0,optical_temp1,optical_temp2,omb_temp_htu,omb_hum_htu,omb_temp_scd,omg_hum_scd,mean_5v_monitor,std_dev_5v_monitor",
 		Content: fmt.Sprintf("%d,%s,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%d,%d,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.4f,%.4f",
 			d.UnixSec, d.PortentaSerial, d.Sps30.Pm1, d.Sps30.Pm2p5, d.Sps30.Pm4, d.Sps30.Pm10, d.Sps30.Pn0p5, d.Sps30.Pn1, d.Sps30.Pn2p5, d.Sps30.Pn4, d.Sps30.Pn10, d.Sps30.TypicalParticleSize, d.Pressure, d.Co2, d.VocIndex, d.FlowTemperature, d.FlowHumidity, d.FlowRate, d.PortentaImx8Temp, d.TeensyMcuTemp, d.OpticalTemperatures[0], d.OpticalTemperatures[1], d.OpticalTemperatures[2], d.OmbTemperatureHtu, d.OmbHumidityHtu, d.OmbTemperatureScd, d.OmbHumidityScd, d.Monitor5vMean, d.Monitor5vStdDev),
@@ -131,7 +139,7 @@ func (d *SecondaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob
 
 func (d *OperaData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	return []CsvFileWriteJob{{
-		Filename: generateFileName(portentaSerial, "Output", d.UnixSec),
+		Filename: generateFileName(portentaSerial, "Output", d.UnixSec, true),
 		Headers:  "unix,portenta,pm2p5,class_label,class_labels,class_probs,temp,rh,sps30_pm2p5,pressure,co2,voc_index",
 		Content: fmt.Sprintf("%d,%s,%.1f,%s,\"%s\",\"%.1f\",%.1f,%.1f,%.1f,%.1f,%d,%d",
 			d.UnixSec, d.PortentaSerial, d.Pm2p5, d.ClassLabel, d.ClassLabels, d.ClassProbs, d.Temp, d.RH, d.Sps30Pm2p5, d.Pressure, d.Co2, d.VocIndex),
@@ -148,7 +156,7 @@ func (p NewPulse) String() string {
 
 func (d *PrimaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	ret := []CsvFileWriteJob{}
-	filename := generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec)
+	filename := generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec, true)
 	for _, c := range d.Counts {
 		var pulsesStr = ""
 		if n := len(c.Pulses); n > 0 {
@@ -264,7 +272,7 @@ func (d *SecondaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWr
 	var buf bytes.Buffer
 	d.Pack(&buf)
 	return []BinaryFileWriteJob{{
-		Filename: generateFileName(portentaSerial, "SecondaryRaw", d.UnixSec),
+		Filename: generateFileName(portentaSerial, "SecondaryRaw", d.UnixSec, false),
 		Content:  buf.Bytes(),
 	}}
 }
@@ -347,7 +355,7 @@ func (d *OperaData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWriteJ
 	var buf bytes.Buffer
 	d.Pack(&buf)
 	return []BinaryFileWriteJob{{
-		Filename: generateFileName(portentaSerial, "Output", d.UnixSec),
+		Filename: generateFileName(portentaSerial, "Output", d.UnixSec, false),
 		Content:  buf.Bytes(),
 	}}
 }
@@ -506,7 +514,7 @@ func (d *PrimaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWrit
 	var buf bytes.Buffer
 	d.Pack(&buf)
 	return []BinaryFileWriteJob{{
-		Filename: generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec),
+		Filename: generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec, false),
 		Content:  buf.Bytes(),
 	}}
 }
