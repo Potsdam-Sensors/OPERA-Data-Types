@@ -76,9 +76,7 @@ func (d *SecondaryData) Populate(portentaSerial string, portentaImx8Temp float32
 	d.Monitor5vStdDev = m.Monitor5VStdDev
 }
 
-type PrimaryData struct {
-	NewTeensyData
-}
+type PrimaryData = NewTeensyData
 
 type OperaData struct {
 	UnixSec        uint32
