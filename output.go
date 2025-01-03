@@ -123,6 +123,7 @@ func (d *OperaData) Populate(portentaSerial string, m *M4SensorMeasurement, s *S
 
 type OutputData interface {
 	CsvFileWriteJob(string) []CsvFileWriteJob
+	BinaryFileWriteJob(string) []BinaryFileWriteJob
 	Pack(io.Writer)
 	Unpack(io.Reader) error
 }

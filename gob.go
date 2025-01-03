@@ -52,6 +52,12 @@ func ReceiveStructGob(conn net.Conn) (interface{}, error) {
 	case DATA_TYPE_ML_PRIMARY:
 		data = &MlPrimaryDataOutput{}
 		dataTypeName = "ml primary"
+	case DATA_TYPE_CSV_FILE:
+		data = &CsvFileWriteJob{}
+		dataTypeName = "csv file write job"
+	case DATA_TYPE_BIN_FILE:
+		data = &BinaryFileWriteJob{}
+		dataTypeName = "binary file write job"
 	default:
 		return nil, fmt.Errorf("recieved unknown datatype: %v", msgType)
 	}
