@@ -3,6 +3,7 @@ package operadatatypes
 import (
 	"encoding/gob"
 	"fmt"
+	"io"
 	"net"
 )
 
@@ -29,6 +30,9 @@ func ReceiveStructGob(conn net.Conn) (interface{}, error) {
 	/* Get message type */
 	var msgType string
 	if err := decoder.Decode(&msgType); err != nil {
+		if err == io.EOF { // Preserve io.EOF during propogation
+			return nil, err
+		}
 		return nil, fmt.Errorf("failed to decode msg type: %v", err)
 	}
 
