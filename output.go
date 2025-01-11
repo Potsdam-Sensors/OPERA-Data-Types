@@ -393,6 +393,14 @@ func (p NewPulse) Unpack(r io.Reader) error {
 func (d *PrimaryData) Pack(w io.Writer) {
 	binary.Write(w, binary.LittleEndian, d.UnixSec)
 	binary.Write(w, binary.LittleEndian, d.MilliSec)
+	binary.Write(w, binary.LittleEndian, d.McuTemp)
+	binary.Write(w, binary.LittleEndian, d.FlowTemp)
+	binary.Write(w, binary.LittleEndian, d.FlowHum)
+	binary.Write(w, binary.LittleEndian, d.FlowRate)
+	binary.Write(w, binary.LittleEndian, d.HvEnabled)
+	binary.Write(w, binary.LittleEndian, d.HvSet)
+	binary.Write(w, binary.LittleEndian, d.HvMonitor)
+
 	binary.Write(w, binary.LittleEndian, uint32(len(d.Counts)))
 	for _, c := range d.Counts {
 		binary.Write(w, binary.LittleEndian, c.PinPd0)
@@ -433,6 +441,31 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 	if err := binary.Read(r, binary.LittleEndian, &d.MilliSec); err != nil {
 		return err
 	}
+	if err := binary.Read(r, binary.LittleEndian, &d.McuTemp); err != nil {
+		return err
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.FlowTemp); err != nil {
+		return err
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.FlowHum); err != nil {
+		return err
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.FlowRate); err != nil {
+		return err
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.FlowTemp); err != nil {
+		return err
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.HvEnabled); err != nil {
+		return err
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.HvSet); err != nil {
+		return err
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.HvMonitor); err != nil {
+		return err
+	}
+
 	var n uint32
 	if err := binary.Read(r, binary.LittleEndian, &n); err != nil {
 		return err
