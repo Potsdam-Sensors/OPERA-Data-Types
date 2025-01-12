@@ -293,3 +293,166 @@ func TestPackUnpackOperaData(t *testing.T) {
 		return
 	}
 }
+
+func TestPrimaryToBinaryWriteJob(t *testing.T) {
+	testData := &PrimaryData{
+		PortentaSerial: "abcdefg12345",
+		TeensyData: NewTeensyData{
+			UnixSec:   uint32(time.Now().Unix()),
+			MilliSec:  1002,
+			McuTemp:   24.3,
+			FlowTemp:  1,
+			FlowHum:   2,
+			FlowRate:  3,
+			HvEnabled: true,
+			HvSet:     12,
+			HvMonitor: 333,
+			Counts: []*NewTeensyCounts{
+				{
+					PinPd0:          1,
+					PinPd1:          2,
+					PinLaser:        99,
+					RawScalar0:      12,
+					RawScalar1:      13,
+					DiffedScalar0:   14,
+					DiffedScalar1:   100,
+					Baseline0:       22.4,
+					Baseline1:       -12.1,
+					RawUpperTh0:     100.1,
+					RawUpperTh1:     12.22,
+					DiffedUpperTh0:  -1,
+					DiffedUpperTh1:  10,
+					MsRead:          255,
+					BuffersRead:     254,
+					NumPulses:       1,
+					MaxLaserOn:      99,
+					PulsesPerSecond: 100,
+					Pulses: []NewPulse{
+						{
+							Indices:  [8]uint16{1, 2, 3, 412, 5, 6, 7, 8},
+							RawPeak:  25,
+							SidePeak: 20,
+						},
+						{
+							Indices:  [8]uint16{1, 2, 3, 4, 5, 6, 7, 8},
+							RawPeak:  255,
+							SidePeak: 21,
+						},
+					},
+				}, {}, {},
+			},
+		},
+	}
+	// Should get exactly 1 job
+	writeJobs := testData.BinaryFileWriteJob("FAKESERIAL")
+	if n := len(writeJobs); n != 1 {
+		t.Errorf("testData.BinaryFileWriteJob() returned %d jobs, expected exactly 1.", n)
+		return
+	}
+
+	// The bytes part should be a 'P', then the data packed
+	writeJob := writeJobs[0]
+	if n := len(writeJob.Content); n < 2 {
+		t.Errorf("writeJob contains %d bytes, expected a number > 1", n)
+		return
+	}
+	if r := writeJob.Content[0]; r != OUTPUT_FILE_RAW_TYPE_INDICATOR_PRIMARY {
+		t.Errorf("writeJob content starts with rune, '%c', expected '%c'", r, OUTPUT_FILE_RAW_TYPE_INDICATOR_PRIMARY)
+	}
+	buff := new(bytes.Buffer)
+	testData.Pack(buff)
+	if !bytes.Equal(buff.Bytes(), writeJob.Content[1:]) {
+		t.Errorf("writeJob content (after first rune) does not match the results of .Pack()")
+	}
+}
+
+func TestSecondaryToBinaryWriteJob(t *testing.T) {
+	testData := &SecondaryData{
+		UnixSec:             12,
+		PortentaSerial:      "abcdefg",
+		Pressure:            101.2,
+		Co2:                 1000,
+		VocIndex:            14,
+		FlowTemperature:     -10.2,
+		FlowHumidity:        1.0,
+		FlowRate:            -2,
+		PortentaImx8Temp:    100,
+		TeensyMcuTemp:       32,
+		OpticalTemperatures: [3]float32{-1, 2, 100.1},
+		OmbTemperatureHtu:   1,
+		OmbHumidityHtu:      2,
+		OmbTemperatureScd:   22,
+		OmbHumidityScd:      5,
+		Monitor5vMean:       10,
+		Monitor5vStdDev:     3.1,
+	}
+
+	// Should get exactly 1 job
+	writeJobs := testData.BinaryFileWriteJob("FAKESERIAL")
+	if n := len(writeJobs); n != 1 {
+		t.Errorf("testData.BinaryFileWriteJob() returned %d jobs, expected exactly 1.", n)
+		return
+	}
+
+	// The bytes part should be a 'P', then the data packed
+	writeJob := writeJobs[0]
+	if n := len(writeJob.Content); n < 2 {
+		t.Errorf("writeJob contains %d bytes, expected a number > 1", n)
+		return
+	}
+	if r := writeJob.Content[0]; r != OUTPUT_FILE_RAW_TYPE_INDICATOR_SECONDARY {
+		t.Errorf("writeJob content starts with rune, '%c', expected '%c'", r, OUTPUT_FILE_RAW_TYPE_INDICATOR_SECONDARY)
+	}
+	buff := new(bytes.Buffer)
+	testData.Pack(buff)
+	if !bytes.Equal(buff.Bytes(), writeJob.Content[1:]) {
+		t.Errorf("writeJob content (after first rune) does not match the results of .Pack()")
+	}
+}
+
+func TestOperaToBinaryWriteJob(t *testing.T) {
+	testData := &OperaData{
+		UnixSec:        12,
+		PortentaSerial: "abcdefg",
+		Pm2p5:          -0.5,
+		ClassLabel:     "Lemons",
+		ClassLabels: []string{
+			"crocodiles",
+			"alligators",
+			"handbags",
+		},
+		ClassProbs: []float32{
+			.3,
+			.2,
+			.5111,
+		},
+		Temp:       199.2,
+		RH:         -.3,
+		Sps30Pm2p5: 12.12,
+		Pressure:   101.2,
+		Co2:        1000,
+		VocIndex:   14,
+	}
+
+	// Should get exactly 1 job
+	writeJobs := testData.BinaryFileWriteJob("FAKESERIAL")
+	if n := len(writeJobs); n != 1 {
+		t.Errorf("testData.BinaryFileWriteJob() returned %d jobs, expected exactly 1.", n)
+		return
+	}
+
+	// The bytes part should be a 'P', then the data packed
+	writeJob := writeJobs[0]
+	if n := len(writeJob.Content); n < 2 {
+		t.Errorf("writeJob contains %d bytes, expected a number > 1", n)
+		return
+	}
+	if r := writeJob.Content[0]; r != OUTPUT_FILE_RAW_TYPE_INDICATOR_OPERA_OUTPUT {
+		t.Errorf("writeJob content starts with rune, '%c', expected '%c'", r, OUTPUT_FILE_RAW_TYPE_INDICATOR_OPERA_OUTPUT)
+	}
+	buff := new(bytes.Buffer)
+	testData.Pack(buff)
+	if !bytes.Equal(buff.Bytes(), writeJob.Content[1:]) {
+		t.Errorf("writeJob content (after first rune) does not match the results of .Pack()")
+	}
+}

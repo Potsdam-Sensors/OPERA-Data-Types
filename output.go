@@ -11,6 +11,9 @@ import (
 /* Util */
 const CSV_FILE_EXTENSION = ".csv"
 const BINARY_FILE_EXTENSION = ".raw"
+const OUTPUT_FILE_RAW_TYPE_INDICATOR_PRIMARY = 'P'
+const OUTPUT_FILE_RAW_TYPE_INDICATOR_SECONDARY = 'S'
+const OUTPUT_FILE_RAW_TYPE_INDICATOR_OPERA_OUTPUT = 'O'
 
 func generateFileName(portentaSerial, dataLabel string, timestamp uint32, isCsv bool) string {
 	t := time.Unix(int64(timestamp), 0)
@@ -274,6 +277,7 @@ func (d *SecondaryData) Unpack(r io.Reader) error {
 // TODO: Can we use generics for this? The only reason I'm even doing a separate function is the filename
 func (d *SecondaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWriteJob {
 	var buf bytes.Buffer
+	buf.Write([]byte{OUTPUT_FILE_RAW_TYPE_INDICATOR_SECONDARY})
 	d.Pack(&buf)
 	return []BinaryFileWriteJob{{
 		Filename: generateFileName(portentaSerial, "SecondaryRaw", d.UnixSec, false),
@@ -357,6 +361,7 @@ func (d *OperaData) Unpack(r io.Reader) error {
 
 func (d *OperaData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWriteJob {
 	var buf bytes.Buffer
+	buf.Write([]byte{OUTPUT_FILE_RAW_TYPE_INDICATOR_OPERA_OUTPUT})
 	d.Pack(&buf)
 	return []BinaryFileWriteJob{{
 		Filename: generateFileName(portentaSerial, "Output", d.UnixSec, false),
@@ -559,6 +564,7 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 
 func (d *PrimaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWriteJob {
 	var buf bytes.Buffer
+	buf.Write([]byte{OUTPUT_FILE_RAW_TYPE_INDICATOR_PRIMARY})
 	d.Pack(&buf)
 	return []BinaryFileWriteJob{{
 		Filename: generateFileName(portentaSerial, "PrimaryRaw", d.TeensyData.UnixSec, false),
