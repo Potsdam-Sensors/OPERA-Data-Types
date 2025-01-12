@@ -85,7 +85,10 @@ func (d *SecondaryData) Populate(portentaSerial string, portentaImx8Temp float32
 	d.Monitor5vStdDev = m.Monitor5VStdDev
 }
 
-type PrimaryData = NewTeensyData
+type PrimaryData struct {
+	PortentaSerial string
+	TeensyData     NewTeensyData
+}
 
 type OperaData struct {
 	UnixSec        uint32
@@ -157,8 +160,8 @@ func (p NewPulse) String() string {
 
 func (d *PrimaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	ret := []CsvFileWriteJob{}
-	filename := generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec, true)
-	for _, c := range d.Counts {
+	filename := generateFileName(portentaSerial, "PrimaryRaw", d.TeensyData.UnixSec, true)
+	for _, c := range d.TeensyData.Counts {
 		var pulsesStr = ""
 		if n := len(c.Pulses); n > 0 {
 			pulsesStr += "\"[" + c.Pulses[0].String()
@@ -175,7 +178,7 @@ func (d *PrimaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 			Headers: "unix,ms,portenta,hv_enabled,hv_set,hv_read,pd0,pd1,laser,raw_scalar0,raw_scalar1,diff_scalar0,diff_scalar1," +
 				"baseline0,baseline1,raw_upper_th0,raw_upper_th1,diff_upper_th0,diff_upper_th1,ms_read,num_buff,max_laser_on,num_pulse,pulses_per_second,pulses",
 			Content: fmt.Sprintf("%d,%d,%s,%v,%d,%d,%d,%d,%d,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.3f,%.3f,%d,%d,%d,%d,%.2f,%s",
-				d.UnixSec, d.MilliSec, portentaSerial, d.HvEnabled, d.HvSet, d.HvMonitor, c.PinPd0, c.PinPd1, c.PinLaser,
+				d.TeensyData.UnixSec, d.TeensyData.MilliSec, d.PortentaSerial, d.TeensyData.HvEnabled, d.TeensyData.HvSet, d.TeensyData.HvMonitor, c.PinPd0, c.PinPd1, c.PinLaser,
 				c.RawScalar0, c.RawScalar1, c.DiffedScalar0, c.DiffedScalar1, c.Baseline0, c.Baseline1, c.RawUpperTh0, c.RawUpperTh1, c.DiffedUpperTh0, c.DiffedUpperTh1,
 				c.MsRead, c.BuffersRead, c.MaxLaserOn, c.NumPulses, c.PulsesPerSecond, pulsesStr),
 		})
@@ -392,18 +395,19 @@ func UnpackPulse(r io.Reader) (NewPulse, error) {
 }
 
 func (d *PrimaryData) Pack(w io.Writer) {
-	binary.Write(w, binary.LittleEndian, d.UnixSec)
-	binary.Write(w, binary.LittleEndian, d.MilliSec)
-	binary.Write(w, binary.LittleEndian, d.McuTemp)
-	binary.Write(w, binary.LittleEndian, d.FlowTemp)
-	binary.Write(w, binary.LittleEndian, d.FlowHum)
-	binary.Write(w, binary.LittleEndian, d.FlowRate)
-	binary.Write(w, binary.LittleEndian, d.HvEnabled)
-	binary.Write(w, binary.LittleEndian, d.HvSet)
-	binary.Write(w, binary.LittleEndian, d.HvMonitor)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.UnixSec)
+	writeStringToBinary(w, d.PortentaSerial)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.MilliSec)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.McuTemp)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.FlowTemp)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.FlowHum)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.FlowRate)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.HvEnabled)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.HvSet)
+	binary.Write(w, binary.LittleEndian, d.TeensyData.HvMonitor)
 
-	binary.Write(w, binary.LittleEndian, uint32(len(d.Counts)))
-	for _, c := range d.Counts {
+	binary.Write(w, binary.LittleEndian, uint32(len(d.TeensyData.Counts)))
+	for _, c := range d.TeensyData.Counts {
 		binary.Write(w, binary.LittleEndian, c.PinPd0)
 		binary.Write(w, binary.LittleEndian, c.PinPd1)
 		binary.Write(w, binary.LittleEndian, c.PinLaser)
@@ -436,31 +440,36 @@ func (d *PrimaryData) Pack(w io.Writer) {
 }
 
 func (d *PrimaryData) Unpack(r io.Reader) error {
-	if err := binary.Read(r, binary.LittleEndian, &d.UnixSec); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.UnixSec); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.MilliSec); err != nil {
+	if ser, err := readStringFromBinary(r); err != nil {
+		return err
+	} else {
+		d.PortentaSerial = ser
+	}
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.MilliSec); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.McuTemp); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.McuTemp); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.FlowTemp); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.FlowTemp); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.FlowHum); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.FlowHum); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.FlowRate); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.FlowRate); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.HvEnabled); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.HvEnabled); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.HvSet); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.HvSet); err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.HvMonitor); err != nil {
+	if err := binary.Read(r, binary.LittleEndian, &d.TeensyData.HvMonitor); err != nil {
 		return err
 	}
 
@@ -468,8 +477,8 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 	if err := binary.Read(r, binary.LittleEndian, &n); err != nil {
 		return err
 	}
-	d.Counts = make([]*NewTeensyCounts, n)
-	for i := range d.Counts {
+	d.TeensyData.Counts = make([]*NewTeensyCounts, n)
+	for i := range d.TeensyData.Counts {
 		c := &NewTeensyCounts{}
 		if err := binary.Read(r, binary.LittleEndian, &c.PinPd0); err != nil {
 			return err
@@ -543,7 +552,7 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 				c.Pulses[j] = p
 			}
 		}
-		d.Counts[i] = c
+		d.TeensyData.Counts[i] = c
 	}
 	return nil
 }
@@ -552,7 +561,7 @@ func (d *PrimaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWrit
 	var buf bytes.Buffer
 	d.Pack(&buf)
 	return []BinaryFileWriteJob{{
-		Filename: generateFileName(portentaSerial, "PrimaryRaw", d.UnixSec, false),
+		Filename: generateFileName(portentaSerial, "PrimaryRaw", d.TeensyData.UnixSec, false),
 		Content:  buf.Bytes(),
 	}}
 }

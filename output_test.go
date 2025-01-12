@@ -74,22 +74,23 @@ func checkPrimaryStructEquality(original, nuevo PrimaryData) error {
 		newVal  interface{}
 		name    string
 	}{
-		{original.UnixSec, nuevo.UnixSec, "UnixSec"},
-		{original.MilliSec, nuevo.MilliSec, "MilliSec"},
-		{original.McuTemp, nuevo.McuTemp, "McuTemp"},
-		{original.FlowTemp, nuevo.FlowTemp, "FlowTemp"},
-		{original.FlowHum, nuevo.FlowHum, "FlowHum"},
-		{original.FlowRate, nuevo.FlowRate, "FlowRate"},
-		{original.HvEnabled, nuevo.HvEnabled, "HvEnabled"},
-		{len(original.Counts), len(nuevo.Counts), "Counts (length)"},
+		{original.PortentaSerial, nuevo.PortentaSerial, "PortentaSerial"},
+		{original.TeensyData.UnixSec, nuevo.TeensyData.UnixSec, "UnixSec"},
+		{original.TeensyData.MilliSec, nuevo.TeensyData.MilliSec, "MilliSec"},
+		{original.TeensyData.McuTemp, nuevo.TeensyData.McuTemp, "McuTemp"},
+		{original.TeensyData.FlowTemp, nuevo.TeensyData.FlowTemp, "FlowTemp"},
+		{original.TeensyData.FlowHum, nuevo.TeensyData.FlowHum, "FlowHum"},
+		{original.TeensyData.FlowRate, nuevo.TeensyData.FlowRate, "FlowRate"},
+		{original.TeensyData.HvEnabled, nuevo.TeensyData.HvEnabled, "HvEnabled"},
+		{len(original.TeensyData.Counts), len(nuevo.TeensyData.Counts), "Counts (length)"},
 	} {
 		if !comparePointers(test.origVal, test.newVal) {
 			return fmt.Errorf("Struct's '%s' members do not match, got '%v' originally, new is '%v'.", test.name, test.origVal, test.newVal)
 		}
 	}
-	for idx := 0; idx < len(original.Counts); idx++ {
-		if err := checkCountsEquality(*original.Counts[idx], *nuevo.Counts[idx]); err != nil {
-			return fmt.Errorf("Struct's counts #%d are not equal, from old to new, they are: \n\t-> %v\n\t-> %v\r\n%v", idx, original.Counts[idx], original.Counts[idx], err)
+	for idx := 0; idx < len(original.TeensyData.Counts); idx++ {
+		if err := checkCountsEquality(*original.TeensyData.Counts[idx], *nuevo.TeensyData.Counts[idx]); err != nil {
+			return fmt.Errorf("Struct's counts #%d are not equal, from old to new, they are: \n\t-> %v\n\t-> %v\r\n%v", idx, original.TeensyData.Counts[idx], nuevo.TeensyData.Counts[idx], err)
 		}
 	}
 	return nil
@@ -97,48 +98,51 @@ func checkPrimaryStructEquality(original, nuevo PrimaryData) error {
 
 func TestPrimaryPackUnpack(t *testing.T) {
 	testData := &PrimaryData{
-		UnixSec:   uint32(time.Now().Unix()),
-		MilliSec:  1002,
-		McuTemp:   24.3,
-		FlowTemp:  1,
-		FlowHum:   2,
-		FlowRate:  3,
-		HvEnabled: true,
-		HvSet:     12,
-		HvMonitor: 333,
-		Counts: []*NewTeensyCounts{
-			{
-				PinPd0:          1,
-				PinPd1:          2,
-				PinLaser:        99,
-				RawScalar0:      12,
-				RawScalar1:      13,
-				DiffedScalar0:   14,
-				DiffedScalar1:   100,
-				Baseline0:       22.4,
-				Baseline1:       -12.1,
-				RawUpperTh0:     100.1,
-				RawUpperTh1:     12.22,
-				DiffedUpperTh0:  -1,
-				DiffedUpperTh1:  10,
-				MsRead:          255,
-				BuffersRead:     254,
-				NumPulses:       1,
-				MaxLaserOn:      99,
-				PulsesPerSecond: 100,
-				Pulses: []NewPulse{
-					{
-						Indices:  [8]uint16{1, 2, 3, 412, 5, 6, 7, 8},
-						RawPeak:  25,
-						SidePeak: 20,
+		PortentaSerial: "abcdefg12345",
+		TeensyData: NewTeensyData{
+			UnixSec:   uint32(time.Now().Unix()),
+			MilliSec:  1002,
+			McuTemp:   24.3,
+			FlowTemp:  1,
+			FlowHum:   2,
+			FlowRate:  3,
+			HvEnabled: true,
+			HvSet:     12,
+			HvMonitor: 333,
+			Counts: []*NewTeensyCounts{
+				{
+					PinPd0:          1,
+					PinPd1:          2,
+					PinLaser:        99,
+					RawScalar0:      12,
+					RawScalar1:      13,
+					DiffedScalar0:   14,
+					DiffedScalar1:   100,
+					Baseline0:       22.4,
+					Baseline1:       -12.1,
+					RawUpperTh0:     100.1,
+					RawUpperTh1:     12.22,
+					DiffedUpperTh0:  -1,
+					DiffedUpperTh1:  10,
+					MsRead:          255,
+					BuffersRead:     254,
+					NumPulses:       1,
+					MaxLaserOn:      99,
+					PulsesPerSecond: 100,
+					Pulses: []NewPulse{
+						{
+							Indices:  [8]uint16{1, 2, 3, 412, 5, 6, 7, 8},
+							RawPeak:  25,
+							SidePeak: 20,
+						},
+						{
+							Indices:  [8]uint16{1, 2, 3, 4, 5, 6, 7, 8},
+							RawPeak:  255,
+							SidePeak: 21,
+						},
 					},
-					{
-						Indices:  [8]uint16{1, 2, 3, 4, 5, 6, 7, 8},
-						RawPeak:  255,
-						SidePeak: 21,
-					},
-				},
-			}, {}, {},
+				}, {}, {},
+			},
 		},
 	}
 
