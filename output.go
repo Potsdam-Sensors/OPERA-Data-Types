@@ -370,24 +370,25 @@ func (p NewPulse) Pack(w io.Writer) {
 	}
 }
 
-func (p NewPulse) Unpack(r io.Reader) error {
+func UnpackPulse(r io.Reader) (NewPulse, error) {
+	p := NewPulse{}
 	if err := binary.Read(r, binary.LittleEndian, &p.RawPeak); err != nil {
-		return err
+		return NewPulse{}, err
 	}
 	if err := binary.Read(r, binary.LittleEndian, &p.SidePeak); err != nil {
-		return err
+		return NewPulse{}, err
 	}
 	var n uint32
 	if err := binary.Read(r, binary.LittleEndian, &n); err != nil {
-		return err
+		return NewPulse{}, err
 	}
 	p.Indices = [NUMBER_INDICES_PULSE]uint16{}
 	for i := range p.Indices {
 		if err := binary.Read(r, binary.LittleEndian, &p.Indices[i]); err != nil {
-			return err
+			return NewPulse{}, err
 		}
 	}
-	return nil
+	return p, nil
 }
 
 func (d *PrimaryData) Pack(w io.Writer) {
@@ -451,9 +452,6 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 		return err
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.FlowRate); err != nil {
-		return err
-	}
-	if err := binary.Read(r, binary.LittleEndian, &d.FlowTemp); err != nil {
 		return err
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.HvEnabled); err != nil {
@@ -539,8 +537,10 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 		}
 		c.Pulses = make([]NewPulse, m)
 		for j := range c.Pulses {
-			if err := c.Pulses[j].Unpack(r); err != nil {
+			if p, err := UnpackPulse(r); err != nil {
 				return err
+			} else {
+				c.Pulses[j] = p
 			}
 		}
 		d.Counts[i] = c
