@@ -10,5 +10,5 @@ const (
 )
 
 const (
-	AEROSOL_NAME_UNKOWN = "Unknown"
+	AEROSOL_NAME_UNKOWN = "Unkwn"
 )
