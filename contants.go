@@ -8,3 +8,7 @@ const (
 	OK_FLOW_RATE_MIN        = 0.0
 	CONFIDENCE_INTERVAL_MIN = .8
 )
+
+const (
+	AEROSOL_NAME_UNKOWN = "Unknown"
+)

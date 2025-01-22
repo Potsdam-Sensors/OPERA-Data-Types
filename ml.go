@@ -170,6 +170,9 @@ func (d *MlClassificationOutputData) GetClass() string {
 			maxProbIdx = idx
 		}
 	}
+	if d.Probabilities[maxProbIdx] < CONFIDENCE_INTERVAL_MIN {
+		return AEROSOL_NAME_UNKOWN
+	}
 	return d.Labels[maxProbIdx]
 }
 
