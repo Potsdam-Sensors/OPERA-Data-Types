@@ -23,8 +23,9 @@ func TestReadConfigFile(t *testing.T) {
 		t.Errorf("only wrote %d bytes out of expected %d bytes", n, len(testDataString))
 		return
 	}
+	f.Close()
 
-	c, err := readConfigFile("./test_config.json")
+	c, err := readConfigFile(TEST_CONFIG_LOCATION)
 	if err != nil {
 		t.Errorf("readConfigFile(): %v", err)
 		return
