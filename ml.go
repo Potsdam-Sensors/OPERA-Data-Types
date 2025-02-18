@@ -48,7 +48,10 @@ type MlPm25OutputData struct {
 
 type mlPm25InputDataPulses struct {
 	Laser, Pd0, Pd1 uint8
-	Pulses          []Pulse
+	MsRead          uint32
+	Baseline0       float32
+	Baseline1       float32
+	Pulses          []NewPulse
 }
 
 func (d *mlPm25InputDataPulses) Serialize() []byte {
@@ -56,11 +59,14 @@ func (d *mlPm25InputDataPulses) Serialize() []byte {
 	binary.Write(buf, binary.LittleEndian, d.Laser)
 	binary.Write(buf, binary.LittleEndian, d.Pd0)
 	binary.Write(buf, binary.LittleEndian, d.Pd1)
+	binary.Write(buf, binary.LittleEndian, d.MsRead)
+	binary.Write(buf, binary.LittleEndian, d.Baseline0)
+	binary.Write(buf, binary.LittleEndian, d.Baseline1)
 	binary.Write(buf, binary.LittleEndian, uint32(len(d.Pulses)))
 	for _, p := range d.Pulses {
-		binary.Write(buf, binary.LittleEndian, p.Height)
-		binary.Write(buf, binary.LittleEndian, p.Width)
+		binary.Write(buf, binary.LittleEndian, p.RawPeak)
 		binary.Write(buf, binary.LittleEndian, p.SidePeak)
+		binary.Write(buf, binary.LittleEndian, p.Indices[:])
 	}
 	return buf.Bytes()
 }
@@ -80,75 +86,88 @@ func (d *MlPm25InputData) Serialize() []byte {
 	return buf.Bytes()
 }
 
-func (d *MlPm25InputData) Populate(t TeensyData) {
-	d.UnixSec = t.UnixSec
-	d.PulseData = make([]mlPm25InputDataPulses, len(t.Counts))
-	for idx, c := range t.Counts {
-		d.PulseData[idx].Laser = c.PinLaser
-		d.PulseData[idx].Pd0 = c.PinPd0
-		d.PulseData[idx].Pd1 = c.PinPd1
-		d.PulseData[idx].Pulses = make([]Pulse, len(c.Pulses))
-		copy(d.PulseData[idx].Pulses, c.Pulses)
+// func (d *MlPm25InputData) Populate(t TeensyData) {
+// 	d.UnixSec = t.UnixSec
+// 	d.PulseData = make([]mlPm25InputDataPulses, len(t.Counts))
+// 	for idx, c := range t.Counts {
+// 		d.PulseData[idx].Laser = c.PinLaser
+// 		d.PulseData[idx].Pd0 = c.PinPd0
+// 		d.PulseData[idx].Pd1 = c.PinPd1
+// 		d.PulseData[idx].Pulses = make([]Pulse, len(c.Pulses))
+// 		copy(d.PulseData[idx].Pulses, c.Pulses)
+// 	}
+// }
+// func TranslateToOldCounts(c *NewTeensyCounts) *TeensyCounts {
+// 	ret := &TeensyCounts{
+// 		PinLaser: c.PinLaser,
+// 		PinPd0:   c.PinPd0,
+// 		PinPd1:   c.PinPd1,
+
+// 		RawScalar0:    c.RawScalar0,
+// 		RawScalar1:    c.RawScalar1,
+// 		DiffedScalar0: c.DiffedScalar0,
+// 		DiffedScalar1: c.DiffedScalar1,
+
+// 		Baseline0: c.Baseline0,
+// 		Baseline1: c.Baseline1,
+
+// 		RawUpperTh0:    c.RawUpperTh0,
+// 		RawUpperTh1:    c.RawUpperTh1,
+// 		DiffedUpperTh0: c.DiffedUpperTh0,
+// 		DiffedUpperTh1: c.DiffedUpperTh1,
+
+// 		MsRead:      c.MsRead,
+// 		BuffersRead: c.BuffersRead,
+// 		NumPulses:   c.NumPulses,
+// 		MaxLaserOn:  c.MaxLaserOn,
+
+// 		PulsesPerSecond: c.PulsesPerSecond,
+
+// 		Pulses: make([]Pulse, len(c.Pulses)),
+// 	}
+// 	usPerPoint := float32(c.MsRead*1000) / float32(c.BuffersRead*3500)
+// 	for idx, p := range c.Pulses {
+// 		ret.Pulses[idx] = Pulse{
+// 			Height:   float32(p.RawPeak) - c.Baseline0,
+// 			Width:    float32(p.Indices[2]+p.Indices[5]) * usPerPoint,
+// 			SidePeak: float32(p.SidePeak) - c.Baseline1,
+// 		}
+// 	}
+
+// 	return ret
+// }
+
+func newTeensyCountsToMlPulses(t *NewTeensyCounts) mlPm25InputDataPulses {
+	ret := mlPm25InputDataPulses{
+		Laser:     t.PinLaser,
+		Pd0:       t.PinPd0,
+		Pd1:       t.PinPd1,
+		MsRead:    t.MsRead,
+		Baseline0: t.Baseline0,
+		Baseline1: t.Baseline1,
 	}
-}
-func TranslateToOldCounts(c *NewTeensyCounts) *TeensyCounts {
-	ret := &TeensyCounts{
-		PinLaser: c.PinLaser,
-		PinPd0:   c.PinPd0,
-		PinPd1:   c.PinPd1,
-
-		RawScalar0:    c.RawScalar0,
-		RawScalar1:    c.RawScalar1,
-		DiffedScalar0: c.DiffedScalar0,
-		DiffedScalar1: c.DiffedScalar1,
-
-		Baseline0: c.Baseline0,
-		Baseline1: c.Baseline1,
-
-		RawUpperTh0:    c.RawUpperTh0,
-		RawUpperTh1:    c.RawUpperTh1,
-		DiffedUpperTh0: c.DiffedUpperTh0,
-		DiffedUpperTh1: c.DiffedUpperTh1,
-
-		MsRead:      c.MsRead,
-		BuffersRead: c.BuffersRead,
-		NumPulses:   c.NumPulses,
-		MaxLaserOn:  c.MaxLaserOn,
-
-		PulsesPerSecond: c.PulsesPerSecond,
-
-		Pulses: make([]Pulse, len(c.Pulses)),
-	}
-	usPerPoint := float32(c.MsRead*1000) / float32(c.BuffersRead*3500)
-	for idx, p := range c.Pulses {
-		ret.Pulses[idx] = Pulse{
-			Height:   float32(p.RawPeak) - c.Baseline0,
-			Width:    float32(p.Indices[2]+p.Indices[5]) * usPerPoint,
-			SidePeak: float32(p.SidePeak) - c.Baseline1,
-		}
-	}
-
+	ret.Pulses = make([]NewPulse, len(t.Pulses))
+	copy(ret.Pulses, t.Pulses)
 	return ret
 }
 
 func NewTeensyDataToMlPm25(t *NewTeensyData) *MlPm25InputData {
-	faux := TeensyData{
+	ret := &MlPm25InputData{
 		UnixSec: t.UnixSec,
-		Counts:  make([]*TeensyCounts, len(t.Counts)),
 	}
-	for idx, c := range t.Counts {
-		faux.Counts[idx] = TranslateToOldCounts(c)
+
+	/* Populate with Pulse Data */
+	for _, c := range t.Counts {
+		ret.PulseData = append(ret.PulseData, newTeensyCountsToMlPulses(c))
 	}
-	ret := &MlPm25InputData{}
-	ret.Populate(faux)
 	return ret
 }
 
-func TeensyDataToMlPm25(t *TeensyData) *MlPm25InputData {
-	ret := &MlPm25InputData{}
-	ret.Populate(*t)
-	return ret
-}
+// func TeensyDataToMlPm25(t *TeensyData) *MlPm25InputData {
+// 	ret := &MlPm25InputData{}
+// 	ret.Populate(*t)
+// 	return ret
+// }
 
 func (d *MlPm25OutputData) DisplayData() *DisplayPrimary {
 	return &DisplayPrimary{
