@@ -195,10 +195,30 @@ func (d *MlClassificationOutputData) GetClass() string {
 	return d.Labels[maxProbIdx]
 }
 
+type MlConcentrationOutputData struct {
+	PM0p3 float32 `json:"PM0_3"`
+	PM1   float32 `json:"PM1"`
+	PM2p5 float32 `json:"PM2_5"`
+	PM10  float32 `json:"PM10"`
+
+	PN0p1  float32 `json:"PN0_1"`
+	PN0p2  float32 `json:"PN0_2"`
+	PN0p3  float32 `json:"PN0_3"`
+	PN0p4  float32 `json:"PN0_4"`
+	PN0p5  float32 `json:"PN0_5"`
+	PN0p6  float32 `json:"PN0_6"`
+	PN0p7  float32 `json:"PN0_7"`
+	PN0p85 float32 `json:"PN0_85"`
+	PN1    float32 `json:"PN1"`
+	PN2p5  float32 `json:"PN2_5"`
+	PN5    float32 `json:"PN5"`
+	PN10   float32 `json:"PN10"`
+}
+
 type MlPrimaryDataOutput struct {
 	UnixSec       uint32
 	Classifcation MlClassificationOutputData
-	Pm25          MlPm25OutputData
+	Concentration MlConcentrationOutputData
 }
 
 /* GOBS */
@@ -213,7 +233,7 @@ func (d *MlPrimaryDataOutput) SendGob(unixSocketPath string) error {
 
 func (d *MlPrimaryDataOutput) DisplayData() *DisplayPrimary {
 	return &DisplayPrimary{
-		Pm2p5:   d.Pm25.Pm2p5,
+		Pm2p5:   d.Concentration.PM2p5,
 		Aerosol: d.Classifcation.GetClass(),
 	}
 }

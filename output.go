@@ -97,10 +97,10 @@ type OperaData struct {
 	UnixSec        uint32
 	PortentaSerial string
 
-	Pm2p5       float32
-	ClassLabel  string
-	ClassLabels []string
-	ClassProbs  []float32
+	Concentrations MlConcentrationOutputData
+	ClassLabel     string
+	ClassLabels    []string
+	ClassProbs     []float32
 
 	Temp       float32
 	RH         float32
@@ -114,7 +114,7 @@ func (d *OperaData) Populate(portentaSerial string, m *M4SensorMeasurement, s *S
 	d.UnixSec = ml.UnixSec
 	d.PortentaSerial = portentaSerial
 
-	d.Pm2p5 = ml.Pm25.Pm2p5
+	d.Concentrations = ml.Concentration
 	d.ClassLabel = ml.Classifcation.GetClass()
 	d.ClassLabels = ml.Classifcation.Labels
 	d.ClassProbs = ml.Classifcation.Probabilities
@@ -134,6 +134,37 @@ type OutputData interface {
 	Unpack(io.Reader) error
 }
 
+const ML_CONCENTRATION_CSV_HEADER = "PM0_3,PM1,PM2_5,PM10,PN0_1,PN0_2,PN0_3,PN0_4,PN0_5,PN0_6,PN0_7,PN0_85,PN1,PN2_5,PN5,PN10"
+
+func (d MlConcentrationOutputData) CsvString() string {
+	return fmt.Sprintf("%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f,%.5f",
+		d.PM0p3, d.PM1, d.PM2p5, d.PM10,
+		d.PN0p1, d.PN0p2, d.PN0p3, d.PN0p4, d.PN0p5, d.PN0p6, d.PN0p7, d.PN0p85,
+		d.PN1, d.PN2p5, d.PN5, d.PN10)
+}
+
+func (d *MlConcentrationOutputData) Iterate() []*float32 {
+	return []*float32{
+		&d.PM0p3, &d.PM1, &d.PM2p5, &d.PM10,
+		&d.PN0p1, &d.PN0p2, &d.PN0p3, &d.PN0p4, &d.PN0p5, &d.PN0p6, &d.PN0p7,
+		&d.PN0p85, &d.PN1, &d.PN2p5, &d.PN5, &d.PN10,
+	}
+}
+func (d MlConcentrationOutputData) Pack(w io.Writer) {
+	for _, pFloat := range (&d).Iterate() {
+		binary.Write(w, binary.LittleEndian, *pFloat)
+	}
+}
+
+func (d *MlConcentrationOutputData) Unpack(r io.Reader) error {
+	for _, pFloat := range d.Iterate() {
+		if err := binary.Read(r, binary.LittleEndian, pFloat); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 /* CSV File Write Job */
 func (d *SecondaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	return []CsvFileWriteJob{{
@@ -147,9 +178,9 @@ func (d *SecondaryData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob
 func (d *OperaData) CsvFileWriteJob(portentaSerial string) []CsvFileWriteJob {
 	return []CsvFileWriteJob{{
 		Filename: generateFileName(portentaSerial, "Output", d.UnixSec, true),
-		Headers:  "unix,portenta,pm2p5,class_label,class_labels,class_probs,temp,rh,sps30_pm2p5,pressure,co2,voc_index",
-		Content: fmt.Sprintf("%d,%s,%.1f,%s,\"%s\",\"%.1f\",%.1f,%.1f,%.1f,%.1f,%d,%d",
-			d.UnixSec, d.PortentaSerial, d.Pm2p5, d.ClassLabel, d.ClassLabels, d.ClassProbs, d.Temp, d.RH, d.Sps30Pm2p5, d.Pressure, d.Co2, d.VocIndex),
+		Headers:  "unix,portenta," + ML_CONCENTRATION_CSV_HEADER + ",class_label,class_labels,class_probs,temp,rh,sps30_pm2p5,pressure,co2,voc_index",
+		Content: fmt.Sprintf("%d,%s,%s,%s,\"%s\",\"%.1f\",%.1f,%.1f,%.1f,%.1f,%d,%d",
+			d.UnixSec, d.PortentaSerial, d.Concentrations.CsvString(), d.ClassLabel, d.ClassLabels, d.ClassProbs, d.Temp, d.RH, d.Sps30Pm2p5, d.Pressure, d.Co2, d.VocIndex),
 	}}
 }
 
@@ -288,7 +319,7 @@ func (d *SecondaryData) BinaryFileWriteJob(portentaSerial string) []BinaryFileWr
 func (d *OperaData) Pack(w io.Writer) {
 	binary.Write(w, binary.LittleEndian, d.UnixSec)
 	writeStringToBinary(w, d.PortentaSerial)
-	binary.Write(w, binary.LittleEndian, d.Pm2p5)
+	d.Concentrations.Pack(w)
 	writeStringToBinary(w, d.ClassLabel)
 	binary.Write(w, binary.LittleEndian, uint32(len(d.ClassLabels)))
 	for _, l := range d.ClassLabels {
@@ -314,7 +345,7 @@ func (d *OperaData) Unpack(r io.Reader) error {
 	if err != nil {
 		return err
 	}
-	if err := binary.Read(r, binary.LittleEndian, &d.Pm2p5); err != nil {
+	if err := (&d.Concentrations).Unpack(r); err != nil {
 		return err
 	}
 	d.ClassLabel, err = readStringFromBinary(r)

@@ -238,7 +238,7 @@ func checkOperaDataEquality(o, n OperaData) error {
 	}{
 		{o.UnixSec, n.UnixSec, "UnixSec"},
 		{o.PortentaSerial, n.PortentaSerial, "PortentaSerial"},
-		{o.Pm2p5, n.Pm2p5, "Pm2p5"},
+		{o.Concentrations, n.Concentrations, "Concentrations"},
 		{o.ClassLabel, n.ClassLabel, "ClassLabel"},
 		{len(o.ClassLabels), len(n.ClassLabels), "ClassLabels (length)"},
 		{o.Temp, n.Temp, "Temp"},
@@ -259,8 +259,10 @@ func TestPackUnpackOperaData(t *testing.T) {
 	testData := &OperaData{
 		UnixSec:        12,
 		PortentaSerial: "abcdefg",
-		Pm2p5:          -0.5,
-		ClassLabel:     "Lemons",
+		Concentrations: MlConcentrationOutputData{
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11, 12, 13, 14, 15,
+		},
+		ClassLabel: "Lemons",
 		ClassLabels: []string{
 			"crocodiles",
 			"alligators",
@@ -414,8 +416,10 @@ func TestOperaToBinaryWriteJob(t *testing.T) {
 	testData := &OperaData{
 		UnixSec:        12,
 		PortentaSerial: "abcdefg",
-		Pm2p5:          -0.5,
-		ClassLabel:     "Lemons",
+		Concentrations: MlConcentrationOutputData{
+			1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11, 12, 13, 14, 15,
+		},
+		ClassLabel: "Lemons",
 		ClassLabels: []string{
 			"crocodiles",
 			"alligators",
