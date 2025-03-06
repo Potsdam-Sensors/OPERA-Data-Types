@@ -338,54 +338,54 @@ func (d *OperaData) Pack(w io.Writer) {
 
 func (d *OperaData) Unpack(r io.Reader) error {
 	if err := binary.Read(r, binary.LittleEndian, &d.UnixSec); err != nil {
-		return err
+		return fmt.Errorf("failed to read unix: %v", err)
 	}
 	var err error
 	d.PortentaSerial, err = readStringFromBinary(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read portenta serial: %v", err)
 	}
 	if err := (&d.Concentrations).Unpack(r); err != nil {
-		return err
+		return fmt.Errorf("failed to read concentrations: %v", err)
 	}
 	d.ClassLabel, err = readStringFromBinary(r)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read class label: %v", err)
 	}
 	var n uint32
 	if err := binary.Read(r, binary.LittleEndian, &n); err != nil {
-		return err
+		return fmt.Errorf("failed to read n classes: %v", err)
 	}
 	d.ClassLabels = make([]string, n)
 	for i := range d.ClassLabels {
 		d.ClassLabels[i], err = readStringFromBinary(r)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to read class labels: %v", err)
 		}
 	}
 	d.ClassProbs = make([]float32, n)
 	for i := range d.ClassProbs {
 		if err := binary.Read(r, binary.LittleEndian, &d.ClassProbs[i]); err != nil {
-			return err
+			return fmt.Errorf("failed to read class probabilities: %v", err)
 		}
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.Temp); err != nil {
-		return err
+		return fmt.Errorf("failed to read temperature: %v", err)
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.RH); err != nil {
-		return err
+		return fmt.Errorf("failed to read rh: %v", err)
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.Sps30Pm2p5); err != nil {
-		return err
+		return fmt.Errorf("failed to read sps30 PM2.5: %v", err)
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.Pressure); err != nil {
-		return err
+		return fmt.Errorf("failed to read pressure: %v", err)
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.Co2); err != nil {
-		return err
+		return fmt.Errorf("failed to read CO2: %v", err)
 	}
 	if err := binary.Read(r, binary.LittleEndian, &d.VocIndex); err != nil {
-		return err
+		return fmt.Errorf("failed to read VOC index: %v", err)
 	}
 	return nil
 }
