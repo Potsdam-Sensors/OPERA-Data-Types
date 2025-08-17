@@ -572,6 +572,7 @@ func (d *PrimaryData) Unpack(r io.Reader) error {
 			return err
 		}
 
+		println("HERE")
 		if err := binary.Read(r, binary.LittleEndian, &c.PulsesPerSecond); err != nil {
 			return err
 		}
